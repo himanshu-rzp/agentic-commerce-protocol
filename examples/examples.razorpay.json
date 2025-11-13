@@ -1,0 +1,297 @@
+{
+  "create_order_request": {
+    "amount": 50000,
+    "currency": "INR",
+    "receipt": "receipt#123",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3...",
+      "merchant_id": "acme",
+      "customer_email": "john@example.com"
+    },
+    "partial_payment": false
+  },
+  "create_order_response": {
+    "id": "order_RB58MiP5SPFYyM",
+    "entity": "order",
+    "amount": 50000,
+    "amount_paid": 0,
+    "amount_due": 50000,
+    "currency": "INR",
+    "receipt": "receipt#123",
+    "status": "created",
+    "attempts": 0,
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3...",
+      "merchant_id": "acme",
+      "customer_email": "john@example.com"
+    },
+    "created_at": 1756455561
+  },
+  "create_payment_card_request": {
+    "amount": 50000,
+    "currency": "INR",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "method": "card",
+    "card": {
+      "number": "4111111111111111",
+      "name": "John Doe",
+      "expiry_month": "12",
+      "expiry_year": "2025",
+      "cvv": "123"
+    },
+    "description": "Payment for order #123",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    }
+  },
+  "create_payment_card_response": {
+    "id": "pay_29QQoUBi66xm2f",
+    "entity": "payment",
+    "amount": 50000,
+    "currency": "INR",
+    "status": "created",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "method": "card",
+    "amount_refunded": 0,
+    "refund_status": null,
+    "captured": false,
+    "description": "Payment for order #123",
+    "card_id": "card_29QQoUBi66xm2g",
+    "card": {
+      "id": "card_29QQoUBi66xm2g",
+      "entity": "card",
+      "name": "John Doe",
+      "last4": "1111",
+      "network": "Visa",
+      "type": "credit",
+      "issuer": null,
+      "international": false,
+      "emi": false,
+      "sub_type": "consumer"
+    },
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    },
+    "fee": null,
+    "tax": null,
+    "error_code": null,
+    "error_description": null,
+    "error_source": null,
+    "error_step": null,
+    "error_reason": null,
+    "created_at": 1756455561
+  },
+  "create_payment_upi_request": {
+    "amount": 50000,
+    "currency": "INR",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "method": "upi",
+    "upi": {
+      "flow": "collect",
+      "vpa": "user@upi"
+    },
+    "description": "Payment for order #123",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    }
+  },
+  "create_payment_upi_response": {
+    "id": "pay_29QQoUBi66xm2h",
+    "entity": "payment",
+    "amount": 50000,
+    "currency": "INR",
+    "status": "created",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "method": "upi",
+    "amount_refunded": 0,
+    "refund_status": null,
+    "captured": false,
+    "description": "Payment for order #123",
+    "bank": null,
+    "wallet": null,
+    "vpa": "user@upi",
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    },
+    "fee": null,
+    "tax": null,
+    "error_code": null,
+    "error_description": null,
+    "error_source": null,
+    "error_step": null,
+    "error_reason": null,
+    "created_at": 1756455561
+  },
+  "capture_payment_request": {
+    "amount": 50000,
+    "currency": "INR"
+  },
+  "capture_payment_response": {
+    "id": "pay_29QQoUBi66xm2f",
+    "entity": "payment",
+    "amount": 50000,
+    "currency": "INR",
+    "status": "captured",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "method": "card",
+    "amount_refunded": 0,
+    "refund_status": null,
+    "captured": true,
+    "description": "Payment for order #123",
+    "card_id": "card_29QQoUBi66xm2g",
+    "card": {
+      "id": "card_29QQoUBi66xm2g",
+      "entity": "card",
+      "name": "John Doe",
+      "last4": "1111",
+      "network": "Visa",
+      "type": "credit",
+      "issuer": "HDFC",
+      "international": false,
+      "emi": false,
+      "sub_type": "consumer"
+    },
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    },
+    "fee": 1000,
+    "tax": 180,
+    "error_code": null,
+    "error_description": null,
+    "created_at": 1756455561
+  },
+  "error_invalid_amount": {
+    "error": {
+      "code": "BAD_REQUEST_ERROR",
+      "description": "The amount must be at least INR 1.00",
+      "field": "amount",
+      "source": "business",
+      "step": "payment_initiation",
+      "reason": "input_validation_failed"
+    }
+  },
+  "error_invalid_card": {
+    "error": {
+      "code": "BAD_REQUEST_ERROR",
+      "description": "Invalid card number",
+      "field": "card.number",
+      "source": "business",
+      "step": "payment_initiation",
+      "reason": "input_validation_failed"
+    }
+  },
+  "error_unauthorized": {
+    "error": {
+      "code": "BAD_REQUEST_ERROR",
+      "description": "Authentication failed due to incorrect API key",
+      "source": "business",
+      "step": "payment_authentication",
+      "reason": "invalid_api_key"
+    }
+  },
+  "error_payment_already_captured": {
+    "error": {
+      "code": "BAD_REQUEST_ERROR",
+      "description": "Payment has already been captured",
+      "source": "business",
+      "step": "payment_capture",
+      "reason": "payment_already_captured"
+    }
+  },
+  "partial_capture_request": {
+    "amount": 30000,
+    "currency": "INR"
+  },
+  "partial_capture_response": {
+    "id": "pay_29QQoUBi66xm2f",
+    "entity": "payment",
+    "amount": 50000,
+    "currency": "INR",
+    "status": "captured",
+    "order_id": "order_RB58MiP5SPFYyM",
+    "method": "card",
+    "amount_refunded": 0,
+    "refund_status": null,
+    "captured": true,
+    "description": "Payment for order #123",
+    "card_id": "card_29QQoUBi66xm2g",
+    "card": {
+      "id": "card_29QQoUBi66xm2g",
+      "entity": "card",
+      "name": "John Doe",
+      "last4": "1111",
+      "network": "Visa",
+      "type": "credit",
+      "issuer": "HDFC",
+      "international": false,
+      "emi": false,
+      "sub_type": "consumer"
+    },
+    "email": "john@example.com",
+    "contact": "+919876543210",
+    "notes": {
+      "checkout_session_id": "csn_01HV3P3..."
+    },
+    "fee": 600,
+    "tax": 108,
+    "error_code": null,
+    "error_description": null,
+    "created_at": 1756455561
+  },
+  "integration_flow_example": {
+    "description": "Complete flow integrating Razorpay with Agentic Checkout",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Create checkout session",
+        "endpoint": "POST /checkout_sessions (Agentic Checkout API)",
+        "result": "checkout_session_id"
+      },
+      {
+        "step": 2,
+        "action": "Create Razorpay order",
+        "endpoint": "POST /v1/orders (Razorpay API)",
+        "request_reference": "create_order_request",
+        "response_reference": "create_order_response",
+        "notes": "Link checkout_session_id in order notes"
+      },
+      {
+        "step": 3,
+        "action": "Collect payment details from user",
+        "description": "User provides card/UPI details through agent interface"
+      },
+      {
+        "step": 4,
+        "action": "Create payment",
+        "endpoint": "POST /v1/payments (Razorpay API)",
+        "request_reference": "create_payment_card_request",
+        "response_reference": "create_payment_card_response",
+        "notes": "Use order_id from step 2"
+      },
+      {
+        "step": 5,
+        "action": "Capture payment (if authorized)",
+        "endpoint": "POST /v1/payments/{payment_id}/capture (Razorpay API)",
+        "request_reference": "capture_payment_request",
+        "response_reference": "capture_payment_response"
+      },
+      {
+        "step": 6,
+        "action": "Complete checkout session",
+        "endpoint": "POST /checkout_sessions/{id}/complete (Agentic Checkout API)",
+        "notes": "Update session status to completed with order details"
+      }
+    ]
+  }
+}
+

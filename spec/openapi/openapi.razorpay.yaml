@@ -1,0 +1,877 @@
+openapi: 3.1.0
+info:
+  title: Razorpay Payment API — Agentic Commerce Integration
+  version: "2025-09-29"
+  description: |
+    Razorpay payment processing APIs adapted for the Agentic Commerce protocol.
+    Implements order creation and payment processing for ChatGPT-driven checkout flows.
+    
+    This specification covers:
+    - Order creation with amount, currency, and metadata
+    - Payment capture with card details and order linkage
+    - Error handling and response formats
+servers:
+  - url: https://api.razorpay.com
+security:
+  - basicAuth: []
+tags:
+  - name: Orders
+    description: Create and manage Razorpay orders
+  - name: Payments
+    description: Create and capture payments
+
+paths:
+  /v1/orders:
+    post:
+      tags: [Orders]
+      summary: Create a Razorpay order
+      operationId: createOrder
+      description: |
+        Creates a new order in Razorpay. An order is a prerequisite for accepting payments.
+        The order amount is specified in the smallest currency unit (e.g., paise for INR).
+        
+        This endpoint integrates with the Agentic Checkout flow by creating orders
+        that can be referenced during payment completion.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ContentType"
+        - $ref: "#/components/parameters/AcceptLanguage"
+        - $ref: "#/components/parameters/UserAgent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/APIVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCreateRequest"
+            examples:
+              basic_order:
+                summary: Basic order with INR currency
+                value:
+                  amount: 50000
+                  currency: INR
+                  receipt: "receipt#123"
+                  notes:
+                    checkout_session_id: "csn_01HV3P3..."
+                    merchant_id: "acme"
+              order_with_metadata:
+                summary: Order with additional metadata
+                value:
+                  amount: 100000
+                  currency: INR
+                  receipt: "receipt#456"
+                  notes:
+                    checkout_session_id: "csn_01HV3P3ABC"
+                    merchant_id: "acme"
+                    customer_email: "john@example.com"
+                    campaign: "q4_sale"
+                  partial_payment: false
+      responses:
+        "200":
+          description: Order created successfully
+          headers:
+            Request-Id:
+              description: Echo of the request correlation ID
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              examples:
+                created_order:
+                  value:
+                    id: "order_RB58MiP5SPFYyM"
+                    entity: "order"
+                    amount: 50000
+                    amount_paid: 0
+                    amount_due: 50000
+                    currency: "INR"
+                    receipt: "receipt#123"
+                    status: "created"
+                    attempts: 0
+                    notes:
+                      checkout_session_id: "csn_01HV3P3..."
+                      merchant_id: "acme"
+                    created_at: 1756455561
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                invalid_amount:
+                  value:
+                    error:
+                      code: "BAD_REQUEST_ERROR"
+                      description: "The amount must be at least INR 1.00"
+                      field: "amount"
+                      source: "business"
+                      step: "payment_initiation"
+                      reason: "input_validation_failed"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                unauthorized:
+                  value:
+                    error:
+                      code: "BAD_REQUEST_ERROR"
+                      description: "Authentication failed due to incorrect API key"
+                      source: "business"
+                      step: "payment_authentication"
+                      reason: "invalid_api_key"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/payments:
+    post:
+      tags: [Payments]
+      summary: Create a payment
+      operationId: createPayment
+      description: |
+        Initiates a payment for a given order. This endpoint is used to create
+        a payment using various payment methods like card, UPI, netbanking, etc.
+        
+        For card payments, the card details must be provided. This integrates
+        with the Agentic Checkout completion flow where payment data is captured.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ContentType"
+        - $ref: "#/components/parameters/AcceptLanguage"
+        - $ref: "#/components/parameters/UserAgent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/APIVersion"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCreateRequest"
+            examples:
+              card_payment:
+                summary: Card payment with full details
+                value:
+                  amount: 50000
+                  currency: INR
+                  order_id: "order_RB58MiP5SPFYyM"
+                  email: "john@example.com"
+                  contact: "+919876543210"
+                  method: "card"
+                  card:
+                    number: "4111111111111111"
+                    name: "John Doe"
+                    expiry_month: "12"
+                    expiry_year: "2025"
+                    cvv: "123"
+                  description: "Payment for order #123"
+                  notes:
+                    checkout_session_id: "csn_01HV3P3..."
+              upi_payment:
+                summary: UPI payment
+                value:
+                  amount: 50000
+                  currency: INR
+                  order_id: "order_RB58MiP5SPFYyM"
+                  email: "john@example.com"
+                  contact: "+919876543210"
+                  method: "upi"
+                  upi:
+                    flow: "collect"
+                    vpa: "user@upi"
+      responses:
+        "200":
+          description: Payment created successfully
+          headers:
+            Request-Id:
+              description: Echo of the request correlation ID
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              examples:
+                created_payment:
+                  value:
+                    id: "pay_29QQoUBi66xm2f"
+                    entity: "payment"
+                    amount: 50000
+                    currency: "INR"
+                    status: "created"
+                    order_id: "order_RB58MiP5SPFYyM"
+                    method: "card"
+                    amount_refunded: 0
+                    refund_status: null
+                    captured: false
+                    description: "Payment for order #123"
+                    card_id: "card_29QQoUBi66xm2g"
+                    card:
+                      id: "card_29QQoUBi66xm2g"
+                      entity: "card"
+                      name: "John Doe"
+                      last4: "1111"
+                      network: "Visa"
+                      type: "credit"
+                      issuer: null
+                      international: false
+                      emi: false
+                      sub_type: "consumer"
+                    email: "john@example.com"
+                    contact: "+919876543210"
+                    notes:
+                      checkout_session_id: "csn_01HV3P3..."
+                    fee: null
+                    tax: null
+                    error_code: null
+                    error_description: null
+                    error_source: null
+                    error_step: null
+                    error_reason: null
+                    created_at: 1756455561
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                invalid_card:
+                  value:
+                    error:
+                      code: "BAD_REQUEST_ERROR"
+                      description: "Invalid card number"
+                      field: "card.number"
+                      source: "business"
+                      step: "payment_initiation"
+                      reason: "input_validation_failed"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/payments/{payment_id}/capture:
+    post:
+      tags: [Payments]
+      summary: Capture a payment
+      operationId: capturePayment
+      description: |
+        Captures an authorized payment. This is used in two-step payment flows
+        where authorization and capture are separate steps.
+        
+        The amount can be less than or equal to the authorized amount for
+        partial capture scenarios.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/ContentType"
+        - $ref: "#/components/parameters/AcceptLanguage"
+        - $ref: "#/components/parameters/UserAgent"
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/APIVersion"
+        - name: payment_id
+          in: path
+          required: true
+          schema: { type: string }
+          description: The unique identifier of the payment to capture
+          example: "pay_29QQoUBi66xm2f"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCaptureRequest"
+            examples:
+              full_capture:
+                summary: Capture full authorized amount
+                value:
+                  amount: 50000
+                  currency: INR
+              partial_capture:
+                summary: Partial capture
+                value:
+                  amount: 30000
+                  currency: INR
+      responses:
+        "200":
+          description: Payment captured successfully
+          headers:
+            Request-Id:
+              description: Echo of the request correlation ID
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              examples:
+                captured_payment:
+                  value:
+                    id: "pay_29QQoUBi66xm2f"
+                    entity: "payment"
+                    amount: 50000
+                    currency: "INR"
+                    status: "captured"
+                    order_id: "order_RB58MiP5SPFYyM"
+                    method: "card"
+                    amount_refunded: 0
+                    refund_status: null
+                    captured: true
+                    description: "Payment for order #123"
+                    card_id: "card_29QQoUBi66xm2g"
+                    card:
+                      id: "card_29QQoUBi66xm2g"
+                      entity: "card"
+                      name: "John Doe"
+                      last4: "1111"
+                      network: "Visa"
+                      type: "credit"
+                      issuer: "HDFC"
+                      international: false
+                      emi: false
+                      sub_type: "consumer"
+                    email: "john@example.com"
+                    contact: "+919876543210"
+                    notes:
+                      checkout_session_id: "csn_01HV3P3..."
+                    fee: 1000
+                    tax: 180
+                    error_code: null
+                    error_description: null
+                    created_at: 1756455561
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                already_captured:
+                  value:
+                    error:
+                      code: "BAD_REQUEST_ERROR"
+                      description: "Payment has already been captured"
+                      source: "business"
+                      step: "payment_capture"
+                      reason: "payment_already_captured"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: |
+        Base64 encoded API Key ID and Secret in the format "key_id:key_secret".
+        Example: Authorization: Basic <base64(key_id:key_secret)>
+
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "Basic a2V5X2lkOmtleV9zZWNyZXQ="
+      description: Basic authentication using Razorpay API Key ID and Secret
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "application/json"
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "en-US"
+    UserAgent:
+      name: User-Agent
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "ChatGPT/2.0 (Mac OS X 15.0.1; arm64; build 0)"
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "idem_abc123"
+      description: Unique key to prevent duplicate requests
+    RequestId:
+      name: Request-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "req_123"
+      description: Unique request identifier for tracing
+    APIVersion:
+      name: API-Version
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "2025-09-29"
+      description: API version for compatibility
+
+  schemas:
+    OrderCreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        amount:
+          type: integer
+          description: |
+            Amount for which the order is created, in currency subunits.
+            For INR, 1 rupee = 100 paise. E.g., ₹500.00 = 50000 paise.
+          minimum: 100
+          example: 50000
+        currency:
+          type: string
+          description: ISO 4217 currency code (uppercase)
+          pattern: "^[A-Z]{3}$"
+          example: "INR"
+        receipt:
+          type: string
+          description: Receipt number for internal reference (max 40 characters)
+          maxLength: 40
+          example: "receipt#123"
+        notes:
+          type: object
+          additionalProperties: { type: string }
+          description: Key-value pairs for additional information (max 15 pairs)
+          example:
+            checkout_session_id: "csn_01HV3P3..."
+            merchant_id: "acme"
+        partial_payment:
+          type: boolean
+          description: Whether to enable partial payments for this order
+          default: false
+      required: [amount, currency]
+
+    Order:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the order
+          example: "order_RB58MiP5SPFYyM"
+        entity:
+          type: string
+          const: "order"
+          description: Entity type
+        amount:
+          type: integer
+          description: Order amount in currency subunits
+          example: 50000
+        amount_paid:
+          type: integer
+          description: Amount paid against the order
+          example: 0
+        amount_due:
+          type: integer
+          description: Amount remaining to be paid
+          example: 50000
+        currency:
+          type: string
+          description: Currency code
+          example: "INR"
+        receipt:
+          type: string
+          description: Receipt number
+          example: "receipt#123"
+        status:
+          type: string
+          enum: [created, attempted, paid]
+          description: Order status
+          example: "created"
+        attempts:
+          type: integer
+          description: Number of payment attempts for this order
+          example: 0
+        notes:
+          type: object
+          additionalProperties: { type: string }
+          description: Additional information
+          example:
+            checkout_session_id: "csn_01HV3P3..."
+        created_at:
+          type: integer
+          description: Unix timestamp of order creation
+          example: 1756455561
+      required: [id, entity, amount, amount_paid, amount_due, currency, status, attempts, created_at]
+
+    PaymentCreateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        amount:
+          type: integer
+          description: Payment amount in currency subunits
+          minimum: 100
+          example: 50000
+        currency:
+          type: string
+          description: ISO 4217 currency code (uppercase)
+          pattern: "^[A-Z]{3}$"
+          example: "INR"
+        order_id:
+          type: string
+          description: Order ID for which payment is being made
+          example: "order_RB58MiP5SPFYyM"
+        email:
+          type: string
+          format: email
+          description: Customer email address
+          example: "john@example.com"
+        contact:
+          type: string
+          description: Customer phone number (with country code)
+          pattern: "^\\+[1-9]\\d{1,14}$"
+          example: "+919876543210"
+        method:
+          type: string
+          enum: [card, netbanking, wallet, emi, upi]
+          description: Payment method
+          example: "card"
+        card:
+          $ref: "#/components/schemas/CardDetails"
+        upi:
+          $ref: "#/components/schemas/UpiDetails"
+        description:
+          type: string
+          description: Payment description
+          maxLength: 255
+          example: "Payment for order #123"
+        notes:
+          type: object
+          additionalProperties: { type: string }
+          description: Key-value pairs for additional information
+          example:
+            checkout_session_id: "csn_01HV3P3..."
+      required: [amount, currency, order_id, email, contact, method]
+
+    CardDetails:
+      type: object
+      additionalProperties: false
+      properties:
+        number:
+          type: string
+          description: Card number (13-19 digits)
+          pattern: "^[0-9]{13,19}$"
+          example: "4111111111111111"
+        name:
+          type: string
+          description: Cardholder name
+          maxLength: 255
+          example: "John Doe"
+        expiry_month:
+          type: string
+          description: Card expiry month (MM)
+          pattern: "^(0[1-9]|1[0-2])$"
+          example: "12"
+        expiry_year:
+          type: string
+          description: Card expiry year (YYYY)
+          pattern: "^[0-9]{4}$"
+          example: "2025"
+        cvv:
+          type: string
+          description: Card CVV (3-4 digits)
+          pattern: "^[0-9]{3,4}$"
+          example: "123"
+      required: [number, name, expiry_month, expiry_year, cvv]
+
+    UpiDetails:
+      type: object
+      additionalProperties: false
+      properties:
+        flow:
+          type: string
+          enum: [collect, intent]
+          description: UPI payment flow
+          example: "collect"
+        vpa:
+          type: string
+          description: Virtual Payment Address (for collect flow)
+          pattern: "^[a-zA-Z0-9.\\-_]{2,256}@[a-zA-Z]{2,64}$"
+          example: "user@upi"
+      required: [flow]
+
+    PaymentCaptureRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        amount:
+          type: integer
+          description: |
+            Amount to capture in currency subunits.
+            Must be <= authorized amount. For full capture, use the full amount.
+          minimum: 100
+          example: 50000
+        currency:
+          type: string
+          description: ISO 4217 currency code (uppercase)
+          pattern: "^[A-Z]{3}$"
+          example: "INR"
+      required: [amount, currency]
+
+    Payment:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the payment
+          example: "pay_29QQoUBi66xm2f"
+        entity:
+          type: string
+          const: "payment"
+          description: Entity type
+        amount:
+          type: integer
+          description: Payment amount in currency subunits
+          example: 50000
+        currency:
+          type: string
+          description: Currency code
+          example: "INR"
+        status:
+          type: string
+          enum: [created, authorized, captured, refunded, failed]
+          description: Payment status
+          example: "captured"
+        order_id:
+          type: string
+          description: Associated order ID
+          example: "order_RB58MiP5SPFYyM"
+        invoice_id:
+          type: string
+          nullable: true
+          description: Associated invoice ID (if any)
+        international:
+          type: boolean
+          description: Whether the payment is international
+        method:
+          type: string
+          enum: [card, netbanking, wallet, emi, upi]
+          description: Payment method used
+          example: "card"
+        amount_refunded:
+          type: integer
+          description: Amount refunded (in currency subunits)
+          example: 0
+        refund_status:
+          type: string
+          nullable: true
+          enum: [null, partial, full]
+          description: Refund status
+        captured:
+          type: boolean
+          description: Whether the payment has been captured
+          example: true
+        description:
+          type: string
+          description: Payment description
+          example: "Payment for order #123"
+        card_id:
+          type: string
+          description: Card token ID
+          example: "card_29QQoUBi66xm2g"
+        card:
+          $ref: "#/components/schemas/CardInfo"
+        bank:
+          type: string
+          nullable: true
+          description: Bank name (for netbanking/UPI)
+        wallet:
+          type: string
+          nullable: true
+          description: Wallet name (for wallet payments)
+        vpa:
+          type: string
+          nullable: true
+          description: Virtual Payment Address (for UPI)
+        email:
+          type: string
+          format: email
+          description: Customer email
+          example: "john@example.com"
+        contact:
+          type: string
+          description: Customer phone number
+          example: "+919876543210"
+        notes:
+          type: object
+          additionalProperties: { type: string }
+          description: Additional information
+        fee:
+          type: integer
+          nullable: true
+          description: Platform fee charged (in currency subunits)
+        tax:
+          type: integer
+          nullable: true
+          description: Tax on fee (in currency subunits)
+        error_code:
+          type: string
+          nullable: true
+          description: Error code (if payment failed)
+        error_description:
+          type: string
+          nullable: true
+          description: Error description (if payment failed)
+        error_source:
+          type: string
+          nullable: true
+          enum: [null, customer, business, bank, gateway]
+          description: Error source (if payment failed)
+        error_step:
+          type: string
+          nullable: true
+          description: Error step (if payment failed)
+        error_reason:
+          type: string
+          nullable: true
+          description: Error reason (if payment failed)
+        created_at:
+          type: integer
+          description: Unix timestamp of payment creation
+          example: 1756455561
+      required:
+        [
+          id,
+          entity,
+          amount,
+          currency,
+          status,
+          order_id,
+          method,
+          amount_refunded,
+          captured,
+          email,
+          contact,
+          created_at,
+        ]
+
+    CardInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Card token ID
+          example: "card_29QQoUBi66xm2g"
+        entity:
+          type: string
+          const: "card"
+          description: Entity type
+        name:
+          type: string
+          description: Cardholder name
+          example: "John Doe"
+        last4:
+          type: string
+          description: Last 4 digits of card number
+          example: "1111"
+        network:
+          type: string
+          enum: [Visa, MasterCard, RuPay, Maestro, American Express, Diners Club, JCB, Unknown]
+          description: Card network
+          example: "Visa"
+        type:
+          type: string
+          enum: [credit, debit, prepaid, unknown]
+          description: Card type
+          example: "credit"
+        issuer:
+          type: string
+          nullable: true
+          description: Card issuing bank
+          example: "HDFC"
+        international:
+          type: boolean
+          description: Whether the card is international
+          example: false
+        emi:
+          type: boolean
+          description: Whether EMI is available
+          example: false
+        sub_type:
+          type: string
+          enum: [consumer, business, unknown]
+          description: Card sub-type
+          example: "consumer"
+      required: [id, entity, last4, network, type, international, emi]
+
+    Error:
+      type: object
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                [
+                  BAD_REQUEST_ERROR,
+                  GATEWAY_ERROR,
+                  SERVER_ERROR,
+                  UNAUTHORIZED_ERROR,
+                ]
+              description: Error code
+              example: "BAD_REQUEST_ERROR"
+            description:
+              type: string
+              description: Human-readable error message
+              example: "Invalid card number"
+            field:
+              type: string
+              description: Field that caused the error (optional)
+              example: "card.number"
+            source:
+              type: string
+              enum: [business, bank, customer, gateway]
+              description: Error source
+              example: "business"
+            step:
+              type: string
+              description: Step at which error occurred
+              example: "payment_initiation"
+            reason:
+              type: string
+              description: Machine-readable error reason
+              example: "input_validation_failed"
+            metadata:
+              type: object
+              additionalProperties: true
+              description: Additional error context
+          required: [code, description]
+      required: [error]
+
