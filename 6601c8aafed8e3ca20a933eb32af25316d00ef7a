@@ -1,0 +1,8 @@
+changelog/unreleased/add-s2s-cards-payment-handler.md
+  b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:16:36.233Z 7,9,11,13-19,21,32,37-38,41,53-54
+examples/unreleased/examples.razorpay_s2s_cards.json
+  b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:15:53.857Z 5-6,89-93
+spec/unreleased/json-schema/schema.s2s_cards.json
+  b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:15:39.780Z 75,79,97,129,220,315-316
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:16:36.233Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 17, "overriden_lines": 0}, "b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:15:53.857Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 7, "overriden_lines": 0}, "b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:15:39.780Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 7, "overriden_lines": 0}}}
