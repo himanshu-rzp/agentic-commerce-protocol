@@ -1,0 +1,4 @@
+changelog/unreleased/add-s2s-cards-payment-handler.md
+  b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:20:05.799Z 49
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"b3851af6-d0c7-4d88-a2da-cfc9b0265a76:2026-05-15T12:20:05.799Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 1, "overriden_lines": 0}}}
