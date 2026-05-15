@@ -1,0 +1,6 @@
+changelog/unreleased/add-upi-intent-payment-handler.md
+  db58a6a2-c9e1-4113-bb8a-bb8e2dc384c7:2026-05-15T12:35:16.860Z 34
+spec/unreleased/json-schema/schema.upi_intent.json
+  db58a6a2-c9e1-4113-bb8a-bb8e2dc384c7:2026-05-15T12:35:03.241Z 59,71,81
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"db58a6a2-c9e1-4113-bb8a-bb8e2dc384c7:2026-05-15T12:35:16.860Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 1, "overriden_lines": 0}, "db58a6a2-c9e1-4113-bb8a-bb8e2dc384c7:2026-05-15T12:35:03.241Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "himanshu.shekhar@razorpay.com", "accepted_lines": 3, "overriden_lines": 0}}}
